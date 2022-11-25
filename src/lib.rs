@@ -5,7 +5,9 @@
 
 use core::{cell::UnsafeCell, mem::size_of, num::NonZeroU32};
 
+/// See §1.
 const COUNT_SOURCE: usize = 1024;
+/// See §1.
 const COUNT_CONTEXT: usize = 15872;
 const U32_BITS: usize = u32::BITS as _;
 
@@ -25,6 +27,47 @@ struct ContextLocal {
     _reserved: [u8; 4096 - 2 * size_of::<u32>()],
 }
 
+/// Trait for enums of external interrupt source.
+///
+/// See §1.4.
+pub trait InterruptSource {
+    /// The identifier number of the interrupt source.
+    fn id(self) -> NonZeroU32;
+}
+
+impl InterruptSource for NonZeroU32 {
+    #[inline]
+    fn id(self) -> NonZeroU32 {
+        self
+    }
+}
+
+impl InterruptSource for u32 {
+    #[inline]
+    fn id(self) -> NonZeroU32 {
+        NonZeroU32::new(self).expect("interrupt source id can not be zero")
+    }
+}
+
+/// A hart context is a given privilege mode on a given hart.
+///
+/// See §1.1.
+pub trait HartContext {
+    /// See §6.
+    ///
+    /// > How PLIC organizes interrupts for the contexts (Hart and privilege mode)
+    /// > is out of RISC-V PLIC specification scope, however it must be spec-out
+    /// > in vendor’s PLIC specification.
+    fn index(self) -> usize;
+}
+
+impl HartContext for usize {
+    #[inline]
+    fn index(self) -> usize {
+        self
+    }
+}
+
 /// The PLIC memory mapping.
 ///
 /// See §3.
@@ -41,26 +84,40 @@ pub struct Plic {
 impl Plic {
     /// See §4.
     #[inline]
-    pub fn write_source_priorities(&self, source: usize, val: u32) {
-        unsafe { self.priorities.0[source].get().write_volatile(val) }
+    pub fn write_source_priorities<S>(&self, source: S, val: u32)
+    where
+        S: InterruptSource,
+    {
+        let ptr = self.priorities.0[source.id().get() as usize].get();
+        unsafe { ptr.write_volatile(val) }
     }
 
     /// See §4.
     #[inline]
-    pub fn read_source_priorities(&self, source: usize) -> u32 {
-        unsafe { self.priorities.0[source].get().read_volatile() }
+    pub fn read_source_priorities<S>(&self, source: S) -> u32
+    where
+        S: InterruptSource,
+    {
+        let ptr = self.priorities.0[source.id().get() as usize].get();
+        unsafe { ptr.read_volatile() }
     }
 
     /// See §4.
     #[inline]
-    pub fn disable_source(&self, source: usize) {
+    pub fn disable_source<S>(&self, source: S)
+    where
+        S: InterruptSource,
+    {
         self.write_source_priorities(source, 0)
     }
 
     /// See §4.
     #[inline]
-    pub fn probe_source_priorities_bits(&self, source: usize) -> u32 {
-        let ptr = self.priorities.0[source].get();
+    pub fn probe_source_priorities_bits<S>(&self, source: S) -> u32
+    where
+        S: InterruptSource,
+    {
+        let ptr = self.priorities.0[source.id().get() as usize].get();
         unsafe {
             ptr.write_volatile(!0);
             ptr.read_volatile()
@@ -69,7 +126,11 @@ impl Plic {
 
     /// See §5.
     #[inline]
-    pub fn read_source_pending(&self, source: usize) -> bool {
+    pub fn read_source_pending<S>(&self, source: S) -> bool
+    where
+        S: InterruptSource,
+    {
+        let source = source.id().get() as usize;
         let group = source / U32_BITS;
         let index = source % U32_BITS;
 
@@ -79,7 +140,13 @@ impl Plic {
 
     /// See §6.
     #[inline]
-    pub fn enable_context(&self, source: usize, context: usize) {
+    pub fn enable_context<S, C>(&self, source: S, context: C)
+    where
+        S: InterruptSource,
+        C: HartContext,
+    {
+        let source = source.id().get() as usize;
+        let context = context.index();
         let pos = source * context;
         let group = pos / U32_BITS;
         let index = pos % U32_BITS;
@@ -90,7 +157,13 @@ impl Plic {
 
     /// See §6.
     #[inline]
-    pub fn disable_context(&self, source: usize, context: usize) {
+    pub fn disable_context<S, C>(&self, source: S, context: C)
+    where
+        S: InterruptSource,
+        C: HartContext,
+    {
+        let source = source.id().get() as usize;
+        let context = context.index();
         let pos = source * context;
         let group = pos / U32_BITS;
         let index = pos % U32_BITS;
@@ -101,7 +174,13 @@ impl Plic {
 
     /// See §6.
     #[inline]
-    pub fn read_context_enable(&self, source: usize, context: usize) -> bool {
+    pub fn read_context_enable<S, C>(&self, source: S, context: C) -> bool
+    where
+        S: InterruptSource,
+        C: HartContext,
+    {
+        let source = source.id().get() as usize;
+        let context = context.index();
         let pos = source * context;
         let group = pos / U32_BITS;
         let index = pos % U32_BITS;
@@ -112,22 +191,31 @@ impl Plic {
 
     /// See §7.
     #[inline]
-    pub fn read_context_priority_threshold(&self, context: usize) -> u32 {
-        let ptr = self.context_local[context].priority_threshold.get();
+    pub fn read_context_priority_threshold<C>(&self, context: C) -> u32
+    where
+        C: HartContext,
+    {
+        let ptr = self.context_local[context.index()].priority_threshold.get();
         unsafe { ptr.read_volatile() }
     }
 
     /// See §7.
     #[inline]
-    pub fn write_context_priority_threshold(&self, context: usize, val: u32) {
-        let ptr = self.context_local[context].priority_threshold.get();
+    pub fn write_context_priority_threshold<C>(&self, context: C, val: u32)
+    where
+        C: HartContext,
+    {
+        let ptr = self.context_local[context.index()].priority_threshold.get();
         unsafe { ptr.write_volatile(val) }
     }
 
     /// See §7.
     #[inline]
-    pub fn probe_context_priority_threshold_bits(&self, context: usize) -> u32 {
-        let ptr = self.context_local[context].priority_threshold.get();
+    pub fn probe_context_priority_threshold_bits<C>(&self, context: C) -> u32
+    where
+        C: HartContext,
+    {
+        let ptr = self.context_local[context.index()].priority_threshold.get();
         unsafe {
             ptr.write_volatile(!0);
             ptr.read_volatile()
@@ -136,16 +224,27 @@ impl Plic {
 
     /// See §8.
     #[inline]
-    pub fn claim(&self, context: usize) -> Option<NonZeroU32> {
-        let ptr = self.context_local[context].claim_or_completion.get();
+    pub fn claim<C>(&self, context: C) -> Option<NonZeroU32>
+    where
+        C: HartContext,
+    {
+        let ptr = self.context_local[context.index()]
+            .claim_or_completion
+            .get();
         NonZeroU32::new(unsafe { ptr.read_volatile() })
     }
 
     /// See §9.
     #[inline]
-    pub fn complete(&self, context: usize, id: NonZeroU32) {
-        let ptr = self.context_local[context].claim_or_completion.get();
-        unsafe { ptr.write_volatile(id.get()) }
+    pub fn complete<C, S>(&self, context: C, source: S)
+    where
+        C: HartContext,
+        S: InterruptSource,
+    {
+        let ptr = self.context_local[context.index()]
+            .claim_or_completion
+            .get();
+        unsafe { ptr.write_volatile(source.id().get()) }
     }
 }
 
