@@ -10,3 +10,7 @@ license = "MulanPSL-2.0 OR MIT"
 readme = "README.md"
 keywords = ["riscv"]
 categories = ["embedded", "hardware-support", "no-std"]
+
+[features]
+# 可以将某些基本的整数类型直接作为中断源和上下文号参数使用
+primitive-id = []

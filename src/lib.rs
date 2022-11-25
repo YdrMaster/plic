@@ -35,6 +35,7 @@ pub trait InterruptSource {
     fn id(self) -> NonZeroU32;
 }
 
+#[cfg(feature = "primitive-id")]
 impl InterruptSource for NonZeroU32 {
     #[inline]
     fn id(self) -> NonZeroU32 {
@@ -42,6 +43,7 @@ impl InterruptSource for NonZeroU32 {
     }
 }
 
+#[cfg(feature = "primitive-id")]
 impl InterruptSource for u32 {
     #[inline]
     fn id(self) -> NonZeroU32 {
@@ -61,6 +63,7 @@ pub trait HartContext {
     fn index(self) -> usize;
 }
 
+#[cfg(feature = "primitive-id")]
 impl HartContext for usize {
     #[inline]
     fn index(self) -> usize {
