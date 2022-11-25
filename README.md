@@ -7,3 +7,5 @@
 ![license](https://img.shields.io/github/license/YdrMaster/plic)
 
 Provide structs and methods to operate riscv plic device.
+
+See [The spec repo](https://github.com/riscv/riscv-plic-spec/).
