@@ -85,19 +85,29 @@ pub struct Plic {
 }
 
 impl Plic {
+    /// Sets priority for interrupt `source` to `value`.
+    ///
+    /// Write `0` to priority `value` effectively disables this interrupt `source`, for the priority
+    /// value 0 is reserved for "never interrupt" by the PLIC specification.
+    ///
+    /// The lowest active priority is priority `1`. The maximum priority depends on PLIC implementation
+    /// and can be detected with [`Plic::probe_priority_bits`].
+    ///
     /// See §4.
     #[inline]
-    pub fn write_source_priorities<S>(&self, source: S, val: u32)
+    pub fn set_priority<S>(&self, source: S, value: u32)
     where
         S: InterruptSource,
     {
         let ptr = self.priorities.0[source.id().get() as usize].get();
-        unsafe { ptr.write_volatile(val) }
+        unsafe { ptr.write_volatile(value) }
     }
 
+    /// Gets priority for interrupt `source`.
+    ///
     /// See §4.
     #[inline]
-    pub fn read_source_priorities<S>(&self, source: S) -> u32
+    pub fn get_priority<S>(&self, source: S) -> u32
     where
         S: InterruptSource,
     {
@@ -105,18 +115,11 @@ impl Plic {
         unsafe { ptr.read_volatile() }
     }
 
+    /// Probe maximum level of priority for interrupt `source`.
+    ///
     /// See §4.
     #[inline]
-    pub fn disable_source<S>(&self, source: S)
-    where
-        S: InterruptSource,
-    {
-        self.write_source_priorities(source, 0)
-    }
-
-    /// See §4.
-    #[inline]
-    pub fn probe_source_priorities_bits<S>(&self, source: S) -> u32
+    pub fn probe_priority_bits<S>(&self, source: S) -> u32
     where
         S: InterruptSource,
     {
@@ -127,9 +130,11 @@ impl Plic {
         }
     }
 
+    /// Check if interrupt `source` is pending.
+    ///
     /// See §5.
     #[inline]
-    pub fn read_source_pending<S>(&self, source: S) -> bool
+    pub fn is_pending<S>(&self, source: S) -> bool
     where
         S: InterruptSource,
     {
@@ -141,9 +146,11 @@ impl Plic {
         (unsafe { ptr.read_volatile() } & (1 << index)) != 0
     }
 
+    /// Enable interrupt `source` in `context`.
+    ///
     /// See §6.
     #[inline]
-    pub fn enable_context<S, C>(&self, source: S, context: C)
+    pub fn enable<S, C>(&self, source: S, context: C)
     where
         S: InterruptSource,
         C: HartContext,
@@ -158,9 +165,11 @@ impl Plic {
         unsafe { ptr.write_volatile(ptr.read_volatile() | (1 << index)) }
     }
 
+    /// Disable interrupt `source` in `context`.
+    ///
     /// See §6.
     #[inline]
-    pub fn disable_context<S, C>(&self, source: S, context: C)
+    pub fn disable<S, C>(&self, source: S, context: C)
     where
         S: InterruptSource,
         C: HartContext,
@@ -175,9 +184,11 @@ impl Plic {
         unsafe { ptr.write_volatile(ptr.read_volatile() & !(1 << index)) }
     }
 
+    /// Check if interrupt `source` is enabled in `context`.
+    ///
     /// See §6.
     #[inline]
-    pub fn read_context_enable<S, C>(&self, source: S, context: C) -> bool
+    pub fn is_enabled<S, C>(&self, source: S, context: C) -> bool
     where
         S: InterruptSource,
         C: HartContext,
@@ -192,9 +203,11 @@ impl Plic {
         (unsafe { ptr.read_volatile() } & (1 << index)) != 0
     }
 
+    /// Get interrupt threshold in `context`.
+    ///
     /// See §7.
     #[inline]
-    pub fn read_context_priority_threshold<C>(&self, context: C) -> u32
+    pub fn get_threshold<C>(&self, context: C) -> u32
     where
         C: HartContext,
     {
@@ -202,19 +215,23 @@ impl Plic {
         unsafe { ptr.read_volatile() }
     }
 
+    /// Set interrupt threshold for `context` to `value`.
+    ///
     /// See §7.
     #[inline]
-    pub fn write_context_priority_threshold<C>(&self, context: C, val: u32)
+    pub fn set_threshold<C>(&self, context: C, value: u32)
     where
         C: HartContext,
     {
         let ptr = self.context_local[context.index()].priority_threshold.get();
-        unsafe { ptr.write_volatile(val) }
+        unsafe { ptr.write_volatile(value) }
     }
 
+    /// Probe maximum supported threshold value the `context` supports.
+    ///
     /// See §7.
     #[inline]
-    pub fn probe_context_priority_threshold_bits<C>(&self, context: C) -> u32
+    pub fn probe_threshold_bits<C>(&self, context: C) -> u32
     where
         C: HartContext,
     {
@@ -225,6 +242,13 @@ impl Plic {
         }
     }
 
+    /// Claim an interrupt in `context`, returning its source.
+    ///
+    /// It is always legal for a hart to perform a claim even if `EIP` is not set.
+    /// A hart could set threshold to maximum to disable interrupt notification, but it does not mean
+    /// interrupt source has stopped to send interrupt signals. In this case, hart would instead
+    /// poll for active interrupt by periodically calling the `claim` function.
+    ///
     /// See §8.
     #[inline]
     pub fn claim<C>(&self, context: C) -> Option<NonZeroU32>
@@ -237,6 +261,8 @@ impl Plic {
         NonZeroU32::new(unsafe { ptr.read_volatile() })
     }
 
+    /// Mark that interrupt identified by `source` is completed in `context`.
+    ///
     /// See §9.
     #[inline]
     pub fn complete<C, S>(&self, context: C, source: S)
