@@ -87,7 +87,7 @@ pub struct Plic {
 impl Plic {
     /// See §4.
     #[inline]
-    pub fn write_source_priorities<S>(&self, source: S, val: u32)
+    pub fn set_priority<S>(&self, source: S, val: u32)
     where
         S: InterruptSource,
     {
@@ -97,7 +97,7 @@ impl Plic {
 
     /// See §4.
     #[inline]
-    pub fn read_source_priorities<S>(&self, source: S) -> u32
+    pub fn get_priority<S>(&self, source: S) -> u32
     where
         S: InterruptSource,
     {
@@ -111,12 +111,12 @@ impl Plic {
     where
         S: InterruptSource,
     {
-        self.write_source_priorities(source, 0)
+        self.set_priority(source, 0)
     }
 
     /// See §4.
     #[inline]
-    pub fn probe_source_priorities_bits<S>(&self, source: S) -> u32
+    pub fn probe_source_priority_bits<S>(&self, source: S) -> u32
     where
         S: InterruptSource,
     {
@@ -129,7 +129,7 @@ impl Plic {
 
     /// See §5.
     #[inline]
-    pub fn read_source_pending<S>(&self, source: S) -> bool
+    pub fn is_source_pending<S>(&self, source: S) -> bool
     where
         S: InterruptSource,
     {
@@ -177,7 +177,7 @@ impl Plic {
 
     /// See §6.
     #[inline]
-    pub fn read_context_enable<S, C>(&self, source: S, context: C) -> bool
+    pub fn is_context_enabled<S, C>(&self, source: S, context: C) -> bool
     where
         S: InterruptSource,
         C: HartContext,
@@ -194,7 +194,7 @@ impl Plic {
 
     /// See §7.
     #[inline]
-    pub fn read_context_priority_threshold<C>(&self, context: C) -> u32
+    pub fn get_threshold<C>(&self, context: C) -> u32
     where
         C: HartContext,
     {
@@ -204,7 +204,7 @@ impl Plic {
 
     /// See §7.
     #[inline]
-    pub fn write_context_priority_threshold<C>(&self, context: C, val: u32)
+    pub fn set_threshold<C>(&self, context: C, val: u32)
     where
         C: HartContext,
     {
@@ -214,7 +214,7 @@ impl Plic {
 
     /// See §7.
     #[inline]
-    pub fn probe_context_priority_threshold_bits<C>(&self, context: C) -> u32
+    pub fn probe_threshold_bits<C>(&self, context: C) -> u32
     where
         C: HartContext,
     {

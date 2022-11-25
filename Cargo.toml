@@ -12,5 +12,10 @@ keywords = ["riscv"]
 categories = ["embedded", "hardware-support", "no-std"]
 
 [features]
-# 可以将某些基本的整数类型直接作为中断源和上下文号参数使用
+default = []
+# Implement plic traits for integer types
+# By using this feature, parameter types of plic functions fall back to integers,
+# static type checks are disabled so this library won't detect parameters in incorrect orders.
+# Although some people may find it userul in prototyping plic implementations,
+# users of this crate are strongly encouraged not to enable this feature in production.
 primitive-id = []
