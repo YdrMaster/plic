@@ -3,7 +3,7 @@ name = "plic"
 description = "Provide structs and methods to operate riscv plic device."
 version = "0.0.0"
 edition = "2021"
-authors = ["YdrMaster <ydrml@hotmail.com>"]
+authors = ["YdrMaster <ydrml@hotmail.com>", "Luo Jia <me@luojia.cc>"]
 repository = "https://github.com/YdrMaster/plic.git"
 documentation = "https://docs.rs/plic"
 license = "MulanPSL-2.0 OR MIT"
@@ -14,6 +14,7 @@ categories = ["embedded", "hardware-support", "no-std"]
 [features]
 default = []
 # Implement plic traits for integer types
+#
 # By using this feature, parameter types of plic functions fall back to integers,
 # static type checks are disabled so this library won't detect parameters in incorrect orders.
 # Although some people may find it userul in prototyping plic implementations,
