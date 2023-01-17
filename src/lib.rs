@@ -277,6 +277,8 @@ impl Plic {
     }
 }
 
+unsafe impl Sync for Plic {}
+
 #[test]
 fn test() {
     assert_eq!(
