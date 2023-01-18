@@ -12,8 +12,14 @@ name: CI
 on:
   push:
     branches: [ "main" ]
+    paths:
+      - '/src/**'
+      - '/Cargo.toml'
   pull_request:
     branches: [ "main" ]
+    paths:
+      - '/src/**'
+      - '/Cargo.toml'
 
 jobs:
   rust-clippy-analyze:

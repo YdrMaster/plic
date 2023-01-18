@@ -1,7 +1,7 @@
 [package]
 name = "plic"
 description = "Provide structs and methods to operate riscv plic device."
-version = "0.0.0"
+version = "0.0.1"
 edition = "2021"
 authors = ["YdrMaster <ydrml@hotmail.com>", "Luo Jia <me@luojia.cc>"]
 repository = "https://github.com/YdrMaster/plic.git"
