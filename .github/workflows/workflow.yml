@@ -13,13 +13,13 @@ on:
   push:
     branches: [ "main" ]
     paths:
-      - '/src/**'
-      - '/Cargo.toml'
+      - 'src/**'
+      - 'Cargo.toml'
   pull_request:
     branches: [ "main" ]
     paths:
-      - '/src/**'
-      - '/Cargo.toml'
+      - 'src/**'
+      - 'Cargo.toml'
 
 jobs:
   rust-clippy-analyze:

@@ -157,7 +157,7 @@ impl Plic {
     {
         let source = source.id().get() as usize;
         let context = context.index();
-        let pos = source * context;
+        let pos = context * COUNT_SOURCE + source;
         let group = pos / U32_BITS;
         let index = pos % U32_BITS;
 
@@ -176,7 +176,7 @@ impl Plic {
     {
         let source = source.id().get() as usize;
         let context = context.index();
-        let pos = source * context;
+        let pos = context * COUNT_SOURCE + source;
         let group = pos / U32_BITS;
         let index = pos % U32_BITS;
 
@@ -195,7 +195,7 @@ impl Plic {
     {
         let source = source.id().get() as usize;
         let context = context.index();
-        let pos = source * context;
+        let pos = context * COUNT_SOURCE + source;
         let group = pos / U32_BITS;
         let index = pos % U32_BITS;
 
