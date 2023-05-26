@@ -85,6 +85,12 @@ pub struct Plic {
 }
 
 impl Plic {
+    /// Converts address integer to `Self` reference.
+    #[inline]
+    pub const unsafe fn from_addr(addr: usize) -> &'static Self {
+        &*(addr as *const Self)
+    }
+
     /// Sets priority for interrupt `source` to `value`.
     ///
     /// Write `0` to priority `value` effectively disables this interrupt `source`, for the priority
