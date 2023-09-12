@@ -35,7 +35,8 @@ pub trait InterruptSource {
     fn id(self) -> NonZeroU32;
 }
 
-#[cfg(feature = "primitive-id")]
+/// This trait is implemented for `NonZeroU32` even if feature `primitive-id` is disabled,
+/// for that it allows simpler code when using `claim` and `complete` functions in `Plic` structure.
 impl InterruptSource for NonZeroU32 {
     #[inline]
     fn id(self) -> NonZeroU32 {
@@ -286,7 +287,7 @@ impl Plic {
 unsafe impl Sync for Plic {}
 
 #[test]
-fn test() {
+fn struct_plic_size() {
     assert_eq!(
         size_of::<Plic>(),
         0x20_0000 + COUNT_CONTEXT * size_of::<ContextLocal>()
