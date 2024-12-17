@@ -86,6 +86,10 @@ pub struct Plic {
 
 impl Plic {
     /// Converts address integer to `Self` reference.
+    ///
+    /// # Safety
+    ///
+    /// The caller must ensure that the given address is a valid PLIC memory mapping.
     #[inline]
     pub const unsafe fn from_addr(addr: usize) -> &'static Self {
         &*(addr as *const Self)
