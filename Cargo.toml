@@ -12,7 +12,7 @@ keywords = ["riscv"]
 categories = ["embedded", "hardware-support", "no-std"]
 
 [dev-dependencies]
-memoffset = "0.9.1"
+memoffset = "0.9"
 
 [features]
 default = []

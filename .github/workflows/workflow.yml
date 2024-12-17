@@ -10,16 +10,11 @@
 name: CI
 
 on:
-  push:
-    branches: [ "main" ]
-    paths:
-      - 'src/**'
-      - 'Cargo.toml'
   pull_request:
-    branches: [ "main" ]
-    paths:
-      - 'src/**'
-      - 'Cargo.toml'
+  push:
+    paths-ignore:
+      - '**.md'
+      - 'LICENSE'
 
 jobs:
   rust-clippy-analyze:
@@ -27,9 +22,10 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       security-events: write
+
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Check format
         run: cargo fmt --check
@@ -43,22 +39,18 @@ jobs:
           crate: clippy-sarif
           version: latest
 
-      - name: Install sarif-fmt
-        uses: actions-rs/install@v0.1
-        with:
-          crate: sarif-fmt
-          version: latest
+      - name: Install required cargo
+        run: cargo install clippy-sarif sarif-fmt
 
       - name: Run rust-clippy
         run:
           cargo clippy
-          --all-featuers
-          --package fast-trap
+          --all-features
           --message-format=json | clippy-sarif | tee rust-clippy-results.sarif | sarif-fmt
         continue-on-error: true
 
       - name: Upload analysis results to GitHub
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: rust-clippy-results.sarif
           wait-for-processing: true
