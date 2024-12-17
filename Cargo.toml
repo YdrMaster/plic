@@ -11,6 +11,9 @@ readme = "README.md"
 keywords = ["riscv"]
 categories = ["embedded", "hardware-support", "no-std"]
 
+[dev-dependencies]
+memoffset = "0.9.1"
+
 [features]
 default = []
 # Implement plic traits for integer types

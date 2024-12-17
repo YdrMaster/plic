@@ -285,10 +285,31 @@ impl Plic {
 
 unsafe impl Sync for Plic {}
 
-#[test]
-fn test() {
-    assert_eq!(
-        size_of::<Plic>(),
-        0x20_0000 + COUNT_CONTEXT * size_of::<ContextLocal>()
-    )
+#[cfg(test)]
+mod tests {
+    use crate::{ContextLocal, Enables, PendingBits, Plic, Priorities};
+    use memoffset::offset_of;
+
+    #[test]
+    fn struct_sizes() {
+        assert_eq!(size_of::<Priorities>(), 0x1000);
+        assert_eq!(size_of::<PendingBits>(), 0x80);
+        assert_eq!(size_of::<Enables>(), 0x1f0000);
+        assert_eq!(size_of::<ContextLocal>(), 0x1000);
+        assert_eq!(size_of::<Plic>(), 0x4000000);
+    }
+
+    #[test]
+    fn struct_plic_offsets() {
+        assert_eq!(offset_of!(Plic, priorities), 0x0);
+        assert_eq!(offset_of!(Plic, pending_bits), 0x1000);
+        assert_eq!(offset_of!(Plic, enables), 0x2000);
+        assert_eq!(offset_of!(Plic, context_local), 0x200000);
+    }
+
+    #[test]
+    fn struct_context_local_offsets() {
+        assert_eq!(offset_of!(ContextLocal, priority_threshold), 0x0);
+        assert_eq!(offset_of!(ContextLocal, claim_or_completion), 0x4);
+    }
 }
